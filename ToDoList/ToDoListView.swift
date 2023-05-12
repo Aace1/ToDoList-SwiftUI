@@ -9,29 +9,37 @@ import SwiftUI
 
 struct ToDoListView: View {
     @State private var sheetIsPresented = false
-    
-    var toDos = ["Learn Swift",
-                 "Build Apps",
-                 "Change the World",
-                 "Bring the Awesome",
-                 "Take A Vacation"]
-    
+    @EnvironmentObject var toDosVM: ToDosViewModel
+        
     var body: some View {
         NavigationStack {
             List {
-                ForEach(toDos, id: \.self) { toDo in
+                ForEach(toDosVM.toDos) { toDo in
                     NavigationLink {
-                        DetailView(passedValue: toDo)
+                        DetailView(toDo: toDo)
                     } label: {
-                        Text(toDo)
+                        Text(toDo.item)
                     }
                     .font(.title2)
                 }
+                // Shorthand calls to .onDelete and .onMove here
+                .onDelete(perform: toDosVM.deleteToDo)
+                .onMove(perform: toDosVM.moveToDo)
+                // Traditional calls are below
+//                .onDelete { indexSet in
+//                    toDosVM.delete(indexSet: indexSet)
+//                }
+//                .onMove { fromOffsets, toOffset in
+//                    toDosVM.move(fromOffsets: fromOffsets, toOffset: toOffset)
+//                }
             }
             .navigationTitle("To Do List")
             .navigationBarTitleDisplayMode(.automatic)
             .listStyle(.plain)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    EditButton()
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         sheetIsPresented.toggle()
@@ -40,10 +48,11 @@ struct ToDoListView: View {
                     }
 
                 }
+                
             }
             .sheet(isPresented: $sheetIsPresented) {
                 NavigationStack {
-                    DetailView(passedValue: "")
+                    DetailView(toDo: ToDo()) // new value
                 }
             }
         }
@@ -53,6 +62,7 @@ struct ToDoListView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ToDoListView()
+            .environmentObject(ToDosViewModel())
     }
 }
 
